@@ -3,129 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Poker Range - TAG Style</title>
+    <title>Poker Pro Tool - Range & Equity</title>
     <style>
         :root {
-            --bg-dark: #121212;
-            --cell-bg: #2a2a2a;
+            --bg-dark: #1a1a1a;
+            --panel-bg: #2d2d2d;
+            --accent: #e74c3c;
             --open-color: #3498db;
-            --call-color: #f39c12;
+            --call-color: #f1c40f;
             --3bet-color: #2ecc71;
-            --text-dim: #888;
         }
-        body {
-            background-color: var(--bg-dark);
-            color: #eee;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-        .header { text-align: center; margin-bottom: 20px; }
-        .controls-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 30px;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-        .label { font-size: 12px; color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
+        body { background: var(--bg-dark); color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         
-        button {
-            background: #333;
-            color: #fff;
-            border: 1px solid #444;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        button:hover { background: #444; }
-        button.active { border-color: #fff; background: #555; }
-        
-        /* Action Colors */
-        button[data-action="open"].active { background: var(--open-color); border-color: #fff; }
-        button[data-action="call"].active { background: var(--call-color); border-color: #fff; }
-        button[data-action="3bet"].active { background: var(--3bet-color); border-color: #fff; }
+        /* Tab System */
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
+        .tab-btn { background: #444; border: none; color: #ccc; padding: 10px 25px; cursor: pointer; border-radius: 5px 5px 0 0; font-weight: bold; }
+        .tab-btn.active { background: var(--panel-bg); color: #fff; border-bottom: 3px solid var(--accent); }
+        .tab-content { background: var(--panel-bg); padding: 20px; border-radius: 0 0 10px 10px; display: none; width: 620px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .tab-content.active { display: block; }
 
-        .matrix {
-            display: grid;
-            grid-template-columns: repeat(13, 45px);
-            gap: 2px;
-            background: #000;
-            padding: 2px;
-            border-radius: 4px;
-        }
-        .cell {
-            background-color: var(--cell-bg);
-            color: var(--text-dim);
-            width: 45px;
-            height: 45px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 11px;
-            font-weight: bold;
-            border-radius: 2px;
-            transition: 0.1s;
-        }
+        /* Matrix Styles */
+        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; background: #000; padding: 2px; }
+        .cell { width: 45px; height: 45px; background: #3d3d3d; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: bold; color: #888; border-radius: 2px; }
+        .active-open { background: var(--open-color) !important; color: white !important; }
+        .active-call { background: var(--call-color) !important; color: white !important; }
+        .active-3bet { background: var(--3bet-color) !important; color: white !important; }
 
-        /* Classes for coloring */
-        .active-open { background-color: var(--open-color) !important; color: white !important; }
-        .active-call { background-color: var(--call-color) !important; color: white !important; }
-        .active-3bet { background-color: var(--3bet-color) !important; color: white !important; }
+        /* Equity Table Styles */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #444; padding: 12px; text-align: center; }
+        th { background: #222; font-size: 13px; color: #aaa; }
+        tr:nth-child(even) { background: #353535; }
+        .highlight { color: var(--3bet-color); font-weight: bold; }
 
-        .legend {
-            margin-top: 25px;
-            display: flex;
-            gap: 20px;
-        }
-        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-        .dot { width: 12px; height: 12px; border-radius: 2px; }
+        .btn-group { display: flex; gap: 5px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
+        button.ctrl { background: #444; color: #fff; border: 1px solid #555; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 12px; }
+        button.ctrl.active { background: #666; border-color: #fff; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>TAG Strategy Matrix (Full Ring)</h2>
-        <p style="color: #888; font-size: 14px;">Chọn vị trí và hành động để xem Range bài gợi ý</p>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('range-tab')">Range Bài (Nới Nhẹ)</button>
+        <button class="tab-btn" onclick="openTab('equity-tab')">Bảng Tính Equity (EV)</button>
     </div>
 
-    <div class="controls-container">
-        <div>
-            <div class="label">Vị trí (Position)</div>
-            <div class="btn-group" id="pos-group">
-                <button onclick="setPos('UTG')" class="active">UTG</button>
-                <button onclick="setPos('MP')">MP</button>
-                <button onclick="setPos('HJ')">HJ</button>
-                <button onclick="setPos('CO')">CO</button>
-                <button onclick="setPos('BTN')">BTN</button>
-                <button onclick="setPos('SB')">SB</button>
-                <button onclick="setPos('BB')">BB</button>
-            </div>
+    <div id="range-tab" class="tab-content active">
+        <div class="btn-group" id="pos-group">
+            <button class="ctrl active" onclick="setPos('UTG')">UTG</button>
+            <button class="ctrl" onclick="setPos('MP')">MP</button>
+            <button class="ctrl" onclick="setPos('CO')">CO</button>
+            <button class="ctrl" onclick="setPos('BTN')">BTN</button>
+            <button class="ctrl" onclick="setPos('SB')">SB</button>
+            <button class="ctrl" onclick="setPos('BB')">BB</button>
         </div>
-        <div>
-            <div class="label">Hành động (Action)</div>
-            <div class="btn-group" id="action-group">
-                <button onclick="setAction('open')" data-action="open" class="active">Open Raise</button>
-                <button onclick="setAction('call')" data-action="call">Flat Call</button>
-                <button onclick="setAction('3bet')" data-action="3bet">3-Bet / Re-raise</button>
-            </div>
+        <div class="btn-group" id="action-group">
+            <button class="ctrl active" onclick="setAction('open')">Open Raise</button>
+            <button class="ctrl" onclick="setAction('call')">Call</button>
+            <button class="ctrl" onclick="setAction('3bet')">3-Bet</button>
         </div>
+        <div class="matrix" id="matrix"></div>
     </div>
 
-    <div class="matrix" id="matrix"></div>
-
-    <div class="legend">
-        <div class="legend-item"><div class="dot" style="background: var(--open-color);"></div> Open</div>
-        <div class="legend-item"><div class="dot" style="background: var(--call-color);"></div> Call</div>
-        <div class="legend-item"><div class="dot" style="background: var(--3bet-color);"></div> 3-Bet</div>
+    <div id="equity-tab" class="tab-content">
+        <h3>Bảng Tra Cứu Xác Suất (Outs)</h3>
+        <p style="font-size: 13px; color: #aaa;">Giúp tính toán xem có nên tiếp tục Call dựa trên Pot Odds hay không.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tình huống</th>
+                    <th>Outs</th>
+                    <th>Turn Win (%)</th>
+                    <th>Turn & River (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Rình Bộ ba (Set-mining)</td>
+                    <td class="highlight">2</td>
+                    <td>4.3%</td>
+                    <td>8.4%</td>
+                </tr>
+                <tr>
+                    <td>Đợi Sảnh lọt khe (Gutshot)</td>
+                    <td class="highlight">4</td>
+                    <td>8.5%</td>
+                    <td>16.5%</td>
+                </tr>
+                <tr>
+                    <td>Đợi Sảnh hai đầu (OESD)</td>
+                    <td class="highlight">8</td>
+                    <td>17.0%</td>
+                    <td>31.5%</td>
+                </tr>
+                <tr>
+                    <td>Đợi Thùng (Flush Draw)</td>
+                    <td class="highlight">9</td>
+                    <td>19.1%</td>
+                    <td>35.0%</td>
+                </tr>
+                <tr>
+                    <td>Thùng + Sảnh hai đầu</td>
+                    <td class="highlight">15</td>
+                    <td>31.9%</td>
+                    <td>54.1%</td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="margin-top: 20px; font-size: 14px; background: #222; padding: 15px; border-radius: 5px;">
+            <strong>Mẹo tính EV nhanh (Quy tắc x2 và x4):</strong><br>
+            - Ở vòng Flop: Lấy số <b>Outs x 4</b> ≈ % thắng tới River.<br>
+            - Ở vòng Turn: Lấy số <b>Outs x 2</b> ≈ % thắng ở River.
+        </div>
     </div>
 
 <script>
@@ -134,63 +123,44 @@
 
     const ranges = {
         'UTG': {
-            'open': ['AA','KK','QQ','JJ','TT','99','88','AKs','AQs','AJs','ATs','KQs','AKo','AQo'],
-            'call': [], // UTG hiếm khi call vì là người mở đầu
-            '3bet': ['AA','KK','QQ','AKs','AKo'] // Khi bị 4-bet hoặc phản đòn
-        },
-        'MP': {
-            'open': ['AA','KK','QQ','JJ','TT','99','88','77','AKs','AQs','AJs','ATs','KQs','KJs','QJs','JTs','AKo','AQo','AJo'],
-            'call': ['77','66','55','AQs','AJs','KQs'],
-            '3bet': ['QQ+','AKs','AKo']
+            'open': ['22','33','44','55','66','77','88','99','TT','JJ','QQ','KK','AA','AKs','AQs','AJs','ATs','A5s','KQs','AKo','AQo'],
+            'call': ['22-77','AJs','KQs'],
+            '3bet': ['QQ+','AKs']
         },
         'CO': {
-            'open': ['AA','KK','QQ','JJ','TT','99','88','77','66','55','AKs','AQs','AJs','ATs','A9s','A8s','KQs','KJs','KTs','QJs','QTs','JTs','T9s','98s','AKo','AQo','AJo','ATo','KQo','KJo'],
-            'call': ['66','55','44','AJs','ATs','KJs','QJs','JTs','T9s','AQo','KQo'],
-            '3bet': ['JJ+','AQs+','AKo','A5s','A4s']
+            'open': ['22+','A2s+','K9s+','Q9s+','J9s+','T9s','98s','87s','76s','A9o+','KTo+','QJo'],
+            'call': ['22-99','A2s-A8s','T9s','98s','87s','AJo','KQo'],
+            '3bet': ['JJ+','AQs+','AKo','A2s-A5s']
         },
         'BTN': {
-            'open': ['22','33','44','55','66','77','88','99','TT','JJ','QQ','KK','AA','A2s','A3s','A4s','A5s','A6s','A7s','A8s','A9s','ATs','AJs','AQs','AKs','K7s','K8s','K9s','KTs','KJs','KQs','Q9s','QTs','QJs','J9s','JTs','T8s','T9s','98s','87s','76s','65s','54s','ATo','AJo','AQo','AKo','KTo','KQo','QTo','JTo'],
-            'call': ['22','33','44','55','66','A9s','A8s','KTs','QTs','JTs','T9s','98s','AJo','KQo'],
+            'open': ['22+','A2s+','K5s+','Q8s+','J8s+','T8s+','97s+','86s+','75s+','65s','54s','A8o+','K9o+','Q9o+','J9o+','T9o'],
+            'call': ['22-88','A2s-A9s','K5s-K9s','Q7s-Q9s','T7s-T9s','98s','87s','76s','A8o-AJo','K9o-KQo'],
             '3bet': ['TT+','AQs+','AKo','A2s-A5s','KJs','QJs']
         },
-        'SB': {
-            'open': ['22+','A2s+','K9s+','Q9s+','J9s+','T8s+','98s+','87s+','76s+','65s+','54s+','ATo+','KTo+','QTo+','JTo'],
-            'call': [], // SB thường chơi 3-bet hoặc Fold để tránh bất lợi vị trí
-            '3bet': ['99+','AJs+','KQs','AQo+','A2s-A5s']
-        },
-        'BB': {
-            'open': [], // BB không open (đã post blind)
-            'call': ['22-TT','A2s-AJs','K9s-KJs','Q9s-QTs','J9s-JTs','T9s','98s','87s','76s','ATo-AQo','KTo-KQo'],
-            '3bet': ['JJ+','AQs+','AKo','A2s-A5s']
-        }
+        // Các vị trí khác tự động kế thừa hoặc bạn có thể bổ sung tương tự
     };
+
+    function openTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
 
     function renderMatrix() {
         const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
         const matrixEl = document.getElementById('matrix');
         matrixEl.innerHTML = '';
-
         ranks.forEach((r1, i) => {
             ranks.forEach((r2, j) => {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 let hand = (i === j) ? r1 + r2 : (i < j ? r1 + r2 + 's' : r2 + r1 + 'o');
                 cell.textContent = hand;
-
-                const currentRange = ranges[currentPos][currentAction];
-                if (currentRange && currentRange.includes(hand)) {
+                const posRange = ranges[currentPos] || ranges['UTG'];
+                if (posRange[currentAction] && posRange[currentAction].includes(hand)) {
                     cell.classList.add('active-' + currentAction);
                 }
-                
-                // Xử lý dải bài đặc biệt (ví dụ A2s-A5s)
-                if (currentRange) {
-                    currentRange.forEach(rangeItem => {
-                        if (rangeItem.includes('-')) {
-                            // Logic xử lý range dải có thể phức tạp hơn, ở đây demo các bài lẻ
-                        }
-                    });
-                }
-
                 matrixEl.appendChild(cell);
             });
         });
@@ -198,14 +168,14 @@
 
     function setPos(pos) {
         currentPos = pos;
-        document.querySelectorAll('#pos-group button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#pos-group .ctrl').forEach(b => b.classList.remove('active'));
         event.target.classList.add('active');
         renderMatrix();
     }
 
     function setAction(action) {
         currentAction = action;
-        document.querySelectorAll('#action-group button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#action-group .ctrl').forEach(b => b.classList.remove('active'));
         event.target.classList.add('active');
         renderMatrix();
     }
