@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Range Matrix</title>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            background-color: transparent;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        button:hover, button.active {
+            background-color: #333;
+            border-color: #888;
+        }
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 1px;
+            background-color: #444;
+            border: 1px solid #444;
+        }
+        .cell {
+            background-color: #ffffff;
+            color: #999;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+        /* Phân loại các nhóm bài */
+        .pair { font-weight: 900; }
+        .suited { }
+        .offsuit { }
+
+        /* Trạng thái Action */
+        .open { background-color: #185a9d !important; color: white !important; }
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .box { width: 15px; height: 15px; border-radius: 3px; }
+        .box-open { background-color: #185a9d; }
+    </style>
+</head>
+<body>
+
+    <div class="controls" id="position-btns">
+        <button onclick="loadRange('UTG')" class="active">UTG (Tight)</button>
+        <button onclick="loadRange('MP')">MP</button>
+        <button onclick="loadRange('CO')">CO</button>
+        <button onclick="loadRange('BTN')">BTN (Tight)</button>
+    </div>
+
+    <div class="matrix" id="matrix">
+        </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="box box-open"></div> Open raise</div>
+    </div>
+
+<script>
+    const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+    const matrixEl = document.getElementById('matrix');
+
+    // Tạo 169 ô của ma trận
+    ranks.forEach((r1, i) => {
+        ranks.forEach((r2, j) => {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            
+            let handName = '';
+            if (i === j) {
+                handName = r1 + r2; // Đôi (Pair)
+                cell.classList.add('pair');
+            } else if (i < j) {
+                handName = r1 + r2 + 's'; // Đồng chất (Suited)
+                cell.classList.add('suited');
+            } else {
+                handName = r2 + r1 + 'o'; // Khác chất (Offsuit) - xếp lá bài lớn lên trước
+                cell.classList.add('offsuit');
+            }
+            
+            cell.textContent = handName;
+            cell.id = 'hand-' + handName;
+            
+            // Cho phép click để tự highlight
+            cell.onclick = () => cell.classList.toggle('open');
+            
+            matrixEl.appendChild(cell);
+        });
+    });
+
+    // Định nghĩa Range Tight cơ bản (Chỉ tính Open Raise)
+    const ranges = {
+        'UTG': ['AA','KK','QQ','JJ','TT','99','88','77','AKs','AQs','AJs','ATs','KQs','KJs','AKo','AQo'],
+        'MP': [], // Bạn có thể thêm vào sau
+        'CO': [], 
+        'BTN': ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','QJs','QTs','JTs','T9s','98s','AKo','AQo','AJo','ATo','KQo','KJo','QJo']
+    };
+
+    function loadRange(position) {
+        // Cập nhật UI nút bấm
+        document.querySelectorAll('#position-btns button').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+
+        // Xóa màu tất cả các ô
+        document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('open'));
+
+        // Tô màu các ô trong range
+        const currentRange = ranges[position];
+        if(currentRange) {
+            currentRange.forEach(hand => {
+                const cell = document.getElementById('hand-' + hand);
+                if(cell) cell.classList.add('open');
+            });
+        }
+    }
+
+    // Load mặc định UTG khi mở trang
+    loadRange('UTG');
+</script>
+
+</body>
+</html>
