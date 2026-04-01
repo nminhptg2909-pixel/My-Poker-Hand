@@ -1,186 +1,132 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poker Pro Tool - Range & Equity</title>
-    <style>
-        :root {
-            --bg-dark: #1a1a1a;
-            --panel-bg: #2d2d2d;
-            --accent: #e74c3c;
-            --open-color: #3498db;
-            --call-color: #f1c40f;
-            --3bet-color: #2ecc71;
-        }
-        body { background: var(--bg-dark); color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        
-        /* Tab System */
-        .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
-        .tab-btn { background: #444; border: none; color: #ccc; padding: 10px 25px; cursor: pointer; border-radius: 5px 5px 0 0; font-weight: bold; }
-        .tab-btn.active { background: var(--panel-bg); color: #fff; border-bottom: 3px solid var(--accent); }
-        .tab-content { background: var(--panel-bg); padding: 20px; border-radius: 0 0 10px 10px; display: none; width: 620px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .tab-content.active { display: block; }
-
-        /* Matrix Styles */
-        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; background: #000; padding: 2px; }
-        .cell { width: 45px; height: 45px; background: #3d3d3d; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: bold; color: #888; border-radius: 2px; }
-        .active-open { background: var(--open-color) !important; color: white !important; }
-        .active-call { background: var(--call-color) !important; color: white !important; }
-        .active-3bet { background: var(--3bet-color) !important; color: white !important; }
-
-        /* Equity Table Styles */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #444; padding: 12px; text-align: center; }
-        th { background: #222; font-size: 13px; color: #aaa; }
-        tr:nth-child(even) { background: #353535; }
-        .highlight { color: var(--3bet-color); font-weight: bold; }
-
-        .btn-group { display: flex; gap: 5px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
-        button.ctrl { background: #444; color: #fff; border: 1px solid #555; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 12px; }
-        button.ctrl.active { background: #666; border-color: #fff; }
-    </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preflop Range</title>
+<style>
+body{margin:0;padding:10px;font-family:Arial,sans-serif;background:#fff;}
+h3{font-size:14px;margin:0 0 10px;color:#222;}
+.row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.btn{padding:7px 10px;font-size:12px;font-weight:bold;border:2px solid #999;border-radius:6px;background:#eee;color:#333;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.btn:active{opacity:0.7;}
+.btn.pos-on{background:#1565C0;color:#fff;border-color:#1565C0;}
+.btn.open-on{background:#1565C0;color:#fff;border-color:#1565C0;}
+.btn.call-on{background:#E65100;color:#fff;border-color:#E65100;}
+.btn.bet3-on{background:#2E7D32;color:#fff;border-color:#2E7D32;}
+#note{font-size:11px;color:#666;margin-bottom:8px;min-height:14px;}
+.tbl{overflow-x:auto;margin-bottom:10px;}
+table{border-collapse:collapse;}
+td{width:25px;height:25px;font-size:9px;font-weight:bold;text-align:center;vertical-align:middle;border:1px solid #ddd;color:#bbb;background:#f5f5f5;}
+td.on-o{background:#1565C0;color:#fff;border-color:#1565C0;}
+td.on-c{background:#E65100;color:#fff;border-color:#E65100;}
+td.on-b{background:#2E7D32;color:#fff;border-color:#2E7D32;}
+.leg{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:#555;}
+.leg-dot{width:12px;height:12px;border-radius:3px;}
+hr{border:none;border-top:1px solid #ddd;margin:14px 0;}
+.label{font-size:12px;color:#555;margin-bottom:4px;}
+input,select{width:100%;padding:8px;font-size:14px;border:2px solid #ccc;border-radius:6px;margin-bottom:10px;box-sizing:border-box;}
+.calc-btn{width:100%;padding:10px;font-size:14px;font-weight:bold;background:#1565C0;color:#fff;border:none;border-radius:6px;cursor:pointer;}
+.res{margin-top:12px;padding:12px;border-radius:8px;border:2px solid #ccc;display:none;}
+.res-num{font-size:28px;font-weight:bold;}
+.res-label{font-size:12px;color:#666;margin-bottom:2px;}
+.verdict{margin-top:10px;padding:8px 12px;border-radius:6px;font-size:13px;font-weight:bold;}
+.v-good{background:#E8F5E9;color:#1B5E20;}
+.v-close{background:#FFF8E1;color:#6D4C00;}
+.v-bad{background:#FFEBEE;color:#B71C1C;}
+.hint{font-size:11px;color:#777;margin-top:6px;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.chip{padding:5px 10px;font-size:11px;font-weight:bold;border:2px solid #aaa;border-radius:20px;background:#f0f0f0;color:#444;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.chip.chip-on{background:#1565C0;color:#fff;border-color:#1565C0;}
+</style>
 </head>
 <body>
-
-    <div class="tabs">
-        <button class="tab-btn active" onclick="openTab('range-tab')">Range Bài (Nới Nhẹ)</button>
-        <button class="tab-btn" onclick="openTab('equity-tab')">Bảng Tính Equity (EV)</button>
-    </div>
-
-    <div id="range-tab" class="tab-content active">
-        <div class="btn-group" id="pos-group">
-            <button class="ctrl active" onclick="setPos('UTG')">UTG</button>
-            <button class="ctrl" onclick="setPos('MP')">MP</button>
-            <button class="ctrl" onclick="setPos('CO')">CO</button>
-            <button class="ctrl" onclick="setPos('BTN')">BTN</button>
-            <button class="ctrl" onclick="setPos('SB')">SB</button>
-            <button class="ctrl" onclick="setPos('BB')">BB</button>
-        </div>
-        <div class="btn-group" id="action-group">
-            <button class="ctrl active" onclick="setAction('open')">Open Raise</button>
-            <button class="ctrl" onclick="setAction('call')">Call</button>
-            <button class="ctrl" onclick="setAction('3bet')">3-Bet</button>
-        </div>
-        <div class="matrix" id="matrix"></div>
-    </div>
-
-    <div id="equity-tab" class="tab-content">
-        <h3>Bảng Tra Cứu Xác Suất (Outs)</h3>
-        <p style="font-size: 13px; color: #aaa;">Giúp tính toán xem có nên tiếp tục Call dựa trên Pot Odds hay không.</p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Tình huống</th>
-                    <th>Outs</th>
-                    <th>Turn Win (%)</th>
-                    <th>Turn & River (%)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Rình Bộ ba (Set-mining)</td>
-                    <td class="highlight">2</td>
-                    <td>4.3%</td>
-                    <td>8.4%</td>
-                </tr>
-                <tr>
-                    <td>Đợi Sảnh lọt khe (Gutshot)</td>
-                    <td class="highlight">4</td>
-                    <td>8.5%</td>
-                    <td>16.5%</td>
-                </tr>
-                <tr>
-                    <td>Đợi Sảnh hai đầu (OESD)</td>
-                    <td class="highlight">8</td>
-                    <td>17.0%</td>
-                    <td>31.5%</td>
-                </tr>
-                <tr>
-                    <td>Đợi Thùng (Flush Draw)</td>
-                    <td class="highlight">9</td>
-                    <td>19.1%</td>
-                    <td>35.0%</td>
-                </tr>
-                <tr>
-                    <td>Thùng + Sảnh hai đầu</td>
-                    <td class="highlight">15</td>
-                    <td>31.9%</td>
-                    <td>54.1%</td>
-                </tr>
-            </tbody>
-        </table>
-        <div style="margin-top: 20px; font-size: 14px; background: #222; padding: 15px; border-radius: 5px;">
-            <strong>Mẹo tính EV nhanh (Quy tắc x2 và x4):</strong><br>
-            - Ở vòng Flop: Lấy số <b>Outs x 4</b> ≈ % thắng tới River.<br>
-            - Ở vòng Turn: Lấy số <b>Outs x 2</b> ≈ % thắng ở River.
-        </div>
-    </div>
-
+<h3>Preflop Range — Full Ring</h3>
+<div class="row" id="posRow"></div>
+<div class="row" id="actRow"></div>
+<div id="note"></div>
+<div class="tbl"><table id="grid"></table></div>
+<div class="leg">
+  <div class="leg-item"><div class="leg-dot" style="background:#1565C0"></div>Open</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#E65100"></div>Call</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#2E7D32"></div>3-bet</div>
+</div>
+<hr>
+<h3>Tính Equity & Pot Odds</h3>
+<div class="label">Street</div>
+<select id="street">
+  <option value="4">Flop (×4)</option>
+  <option value="2">Turn (×2)</option>
+</select>
+<div class="label">Loại draw</div>
+<div class="chips" id="chips"></div>
+<div class="label">Số outs (tự nhập)</div>
+<input type="number" id="outsInp" placeholder="vd: 9" min="1" max="20">
+<div class="label">Pot hiện tại (k)</div>
+<input type="number" id="potInp" placeholder="vd: 200">
+<div class="label">Đối thủ bet (k)</div>
+<input type="number" id="betInp" placeholder="vd: 100">
+<button class="calc-btn" onclick="doCalc()">TÍNH EV</button>
+<div class="res" id="res">
+  <div class="res-label">Equity của bạn</div>
+  <div class="res-num" id="eqShow" style="color:#1565C0"></div>
+  <div class="res-label" style="margin-top:8px;">Pot odds cần</div>
+  <div class="res-num" id="odShow" style="color:#555"></div>
+  <div class="verdict" id="verd"></div>
+  <div class="hint" id="hintShow"></div>
+</div>
 <script>
-    let currentPos = 'UTG';
-    let currentAction = 'open';
-
-    const ranges = {
-        'UTG': {
-            'open': ['22','33','44','55','66','77','88','99','TT','JJ','QQ','KK','AA','AKs','AQs','AJs','ATs','A5s','KQs','AKo','AQo'],
-            'call': ['22-77','AJs','KQs'],
-            '3bet': ['QQ+','AKs']
-        },
-        'CO': {
-            'open': ['22+','A2s+','K9s+','Q9s+','J9s+','T9s','98s','87s','76s','A9o+','KTo+','QJo'],
-            'call': ['22-99','A2s-A8s','T9s','98s','87s','AJo','KQo'],
-            '3bet': ['JJ+','AQs+','AKo','A2s-A5s']
-        },
-        'BTN': {
-            'open': ['22+','A2s+','K5s+','Q8s+','J8s+','T8s+','97s+','86s+','75s+','65s','54s','A8o+','K9o+','Q9o+','J9o+','T9o'],
-            'call': ['22-88','A2s-A9s','K5s-K9s','Q7s-Q9s','T7s-T9s','98s','87s','76s','A8o-AJo','K9o-KQo'],
-            '3bet': ['TT+','AQs+','AKo','A2s-A5s','KJs','QJs']
-        },
-        // Các vị trí khác tự động kế thừa hoặc bạn có thể bổ sung tương tự
-    };
-
-    function openTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
-    }
-
-    function renderMatrix() {
-        const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
-        const matrixEl = document.getElementById('matrix');
-        matrixEl.innerHTML = '';
-        ranks.forEach((r1, i) => {
-            ranks.forEach((r2, j) => {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                let hand = (i === j) ? r1 + r2 : (i < j ? r1 + r2 + 's' : r2 + r1 + 'o');
-                cell.textContent = hand;
-                const posRange = ranges[currentPos] || ranges['UTG'];
-                if (posRange[currentAction] && posRange[currentAction].includes(hand)) {
-                    cell.classList.add('active-' + currentAction);
-                }
-                matrixEl.appendChild(cell);
-            });
-        });
-    }
-
-    function setPos(pos) {
-        currentPos = pos;
-        document.querySelectorAll('#pos-group .ctrl').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
-        renderMatrix();
-    }
-
-    function setAction(action) {
-        currentAction = action;
-        document.querySelectorAll('#action-group .ctrl').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
-        renderMatrix();
-    }
-
-    renderMatrix();
+var RANKS=['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+var DATA={
+  'UTG':{o:['AA','KK','QQ','JJ','TT','99','88','77','AKs','AQs','AJs','ATs','AKo','AQo','AJo','KQs','KJs','KTs','KQo','QJs','QTs','JTs','T9s'],c:['QQ','JJ','AKs','AKo'],b:['AA','KK'],n:'UTG: Chặt nhất — khoảng 15% tay.'},
+  'UTG+1':{o:['AA','KK','QQ','JJ','TT','99','88','77','66','AKs','AQs','AJs','ATs','AKo','AQo','AJo','ATo','KQs','KJs','KTs','KQo','KJo','QJs','QTs','JTs','J9s','T9s','T8s'],c:['QQ','JJ','TT','AKs','AQs','AKo'],b:['AA','KK'],n:'UTG+1: Mở thêm chút so với UTG.'},
+  'MP':{o:['AA','KK','QQ','JJ','TT','99','88','77','66','55','AKs','AQs','AJs','ATs','A9s','A8s','AKo','AQo','AJo','ATo','KQs','KJs','KTs','KQo','QJs','QTs','JTs','J8s','T9s','T8s','98s'],c:['TT','99','88','77','AQs','AJs','AQo','KQs'],b:['AA','KK','QQ','AKs','AKo'],n:'MP: Middle position — range trung bình.'},
+  'HJ':{o:['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','AKo','AQo','AJo','ATo','KQs','KJs','KTs','K9s','KQo','QJs','QTs','Q9s','JTs','J9s','T9s','T8s','T7s','98s','97s','87s'],c:['TT','99','88','77','66','AJs','ATs','AJo','KQs','KJs','QJs'],b:['AA','KK','QQ','JJ','AKs','AQs','AKo'],n:'HJ: Hijack — bắt đầu mở rộng range.'},
+  'CO':{o:['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','AKo','AQo','AJo','ATo','KQs','KJs','KTs','K9s','K8s','K7s','K6s','KQo','KJo','QJs','QTs','Q9s','Q8s','JTs','J9s','J8s','T9s','T8s','98s','97s','87s','86s','76s','65s'],c:['99','88','77','66','55','ATs','A9s','ATo','KJs','KTs','QJs','QTs','JTs'],b:['AA','KK','QQ','JJ','TT','AKs','AQs','AJs','AKo','AQo'],n:'CO: Cutoff — gần BTN, range khá rộng.'},
+  'BTN':{o:['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','AKo','AQo','AJo','ATo','A9o','A8o','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s','K2s','KQo','KJo','KTo','QJs','QTs','Q9s','Q8s','Q7s','Q6s','QTo','JTs','J9s','J8s','J7s','JTo','T9s','T8s','T7s','98s','97s','87s','86s','76s','75s','65s','64s','54s'],c:['88','77','66','55','44','33','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','A9o','A8o','KTo','QTo','JTo','T9s','98s','87s'],b:['AA','KK','QQ','JJ','TT','99','AKs','AQs','AJs','ATs','AKo','ATo','KQs'],n:'BTN: Button — vị trí tốt nhất, range rộng nhất.'},
+  'SB':{o:['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','AKo','AQo','AJo','ATo','KQs','KJs','KTs','K9s','KQo','QJs','QTs','Q9s','JTs','J9s','T9s','T8s','98s','87s','76s','65s'],c:[],b:['AA','KK','QQ','JJ','TT','AKs','AQs','AJs','AKo','AQo','A5s','A4s','K5s'],n:'SB: Không nên call — OOP bất lợi. 3-bet hoặc fold.'},
+  'BB':{o:[],c:['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','KQo','KJo','KTo','K9o','QJs','QTs','Q9s','Q8s','Q7s','QJo','QTo','Q9o','JTs','J9s','J8s','J7s','JTo','J9o','T9s','T8s','T7s','T9o','98s','97s','96s','87s','86s','85s','76s','75s','65s','64s','54s','53s'],b:['AA','KK','QQ','JJ','TT','AKs','AQs','AKo','A3s','A2s','K4s','76s'],n:'BB: Defend rộng — đã bỏ tiền, pot odds tốt nhất.'}
+};
+var POSITIONS=['UTG','UTG+1','MP','HJ','CO','BTN','SB','BB'];
+var curPos='UTG',curAct='o';
+function getKey(i,j){if(i===j)return RANKS[i]+RANKS[j];if(i<j)return RANKS[i]+RANKS[j]+'s';return RANKS[j]+RANKS[i]+'o';}
+function renderAll(){
+  var ph='';for(var i=0;i<POSITIONS.length;i++){var p=POSITIONS[i];ph+='<button class="btn'+(p===curPos?' pos-on':'')+'" onclick="setPos(\''+p+'\')">'+p+'</button>';}
+  document.getElementById('posRow').innerHTML=ph;
+  var acts=[['o','Open','open-on'],['c','Call','call-on'],['b','3-bet','bet3-on']];var ah='';
+  for(var j=0;j<acts.length;j++){var a=acts[j];ah+='<button class="btn'+(curAct===a[0]?' '+a[2]:'')+'" onclick="setAct(\''+a[0]+'\')">'+a[1]+'</button>';}
+  document.getElementById('actRow').innerHTML=ah;
+  document.getElementById('note').textContent=DATA[curPos].n||'';
+  var d=DATA[curPos],arr=curAct==='o'?d.o:curAct==='c'?d.c:d.b,set={};
+  for(var k=0;k<arr.length;k++)set[arr[k]]=true;
+  var cls=curAct==='o'?'on-o':curAct==='c'?'on-c':'on-b',rows='';
+  for(var r=0;r<13;r++){rows+='<tr>';for(var c=0;c<13;c++){var key=getKey(r,c);rows+='<td class="'+(set[key]?cls:'')+'">'+key+'</td>';}rows+='</tr>';}
+  document.getElementById('grid').innerHTML=rows;
+}
+window.setPos=function(p){curPos=p;renderAll();}
+window.setAct=function(a){curAct=a;renderAll();}
+renderAll();
+var PRESETS=[{n:'Flush draw',o:9},{n:'Straight 2 đầu',o:8},{n:'Set→Full',o:7},{n:'Overcards',o:6},{n:'Gutshot',o:4},{n:'Pair→Set',o:2}];
+var selOut=null;
+function renderChips(){var h='';for(var i=0;i<PRESETS.length;i++){var p=PRESETS[i];h+='<div class="chip'+(selOut===p.o?' chip-on':'')+'" onclick="pickChip('+p.o+')">'+p.n+' ('+p.o+')</div>';}document.getElementById('chips').innerHTML=h;}
+window.pickChip=function(o){selOut=o;document.getElementById('outsInp').value=o;renderChips();}
+renderChips();
+window.doCalc=function(){
+  var outs=parseInt(document.getElementById('outsInp').value)||0;
+  var pot=parseFloat(document.getElementById('potInp').value)||0;
+  var bet=parseFloat(document.getElementById('betInp').value)||0;
+  var mult=parseInt(document.getElementById('street').value);
+  if(outs<1||pot<=0||bet<=0){alert('Nhập đủ outs, pot và bet nhé!');return;}
+  var eq=Math.min(outs*mult,100),odds=Math.round(bet/(pot+bet)*100),diff=eq-odds;
+  document.getElementById('eqShow').textContent=eq+'%';
+  document.getElementById('odShow').textContent=odds+'%';
+  var verd=document.getElementById('verd'),hint=document.getElementById('hintShow');
+  if(diff>5){verd.className='verdict v-good';verd.textContent='✓ NÊN CALL — Equity hơn pot odds +'+diff+'%';hint.textContent='EV dương rõ. Call tự tin.';}
+  else if(diff>=0){verd.className='verdict v-close';verd.textContent='~ SÁT NÚT — Hơn chỉ +'+diff+'%';hint.textContent='Call được nhưng cần implied odds tốt.';}
+  else if(diff>=-8){verd.className='verdict v-close';verd.textContent='~ CÂN NHẮC — Kém '+Math.abs(diff)+'%';hint.textContent='Fold an toàn hơn trừ khi implied odds rất tốt.';}
+  else{verd.className='verdict v-bad';verd.textContent='✗ NÊN FOLD — Kém pot odds '+Math.abs(diff)+'%';hint.textContent='EV âm rõ ràng. Fold.';}
+  document.getElementById('res').style.display='block';
+}
 </script>
 </body>
 </html>
